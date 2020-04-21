@@ -1,20 +1,20 @@
 mod github;
+use github::{get_participants, lines_of, User};
+
+const REPO: &str = "saidaspen/rustcred";
+const BRANCH: &str = "master";
 
 fn main() {
     // Get participants
-    let participants: Vec<github::User> = match github::get_participants() {
-        Ok(users) => users,
-        _ => panic!("Unable to get participants."),
-    };
+    let participants: Vec<User> = get_participants().expect("Unable to get partricipants");
     println!("All participants: {:?}", participants);
 
     // Read the users who has opted out
-    let opted_out: Vec<String> =
-        github::lines_of("saidaspen/rustcred", "master", "opted_out").unwrap_or_else(|x| vec![]);
+    let opted_out: Vec<String> = lines_of(REPO, BRANCH, "opted_out").unwrap_or_else(|_| vec![]);
     println!("Users who has opted out: {:?}", opted_out);
 
     // Filter out participants who have opted out
-    let participants: Vec<github::User> = participants
+    let participants: Vec<User> = participants
         .iter()
         .filter(|p| !opted_out.contains(&p.login))
         .map(|x| x.clone())
@@ -23,8 +23,7 @@ fn main() {
 
     // Get all tracked repos
     let tracked_repos: Vec<String> =
-        github::lines_of("saidaspen/rustcred", "master", "tracked_repos")
-            .expect("expected to find tracked_repos file");
+        lines_of(REPO, BRANCH, "tracked_repos").expect("expected to find tracked_repos file");
     println!("Tracked repos: {:?}", tracked_repos);
 
     // for each participant {

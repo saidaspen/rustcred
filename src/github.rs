@@ -2,6 +2,8 @@ use std::error;
 
 use serde::Deserialize;
 
+const APP_NAME: &str = "RustCred";
+
 /// User representation of the GitHub API.
 /// Note that the GitHub API has several more fields, not all of them are interesting to us.
 /// Have a look at the GitHub API Documentation for details: https://developer.github.com/v3/users/
@@ -35,8 +37,7 @@ pub struct PrSearchItem {
 pub fn get_participants() -> Result<Vec<User>, Box<dyn error::Error>> {
     Ok(reqwest::blocking::Client::new()
         .get("https://api.github.com/repos/saidaspen/rustcred/stargazers")
-        // User-Agent is mandated by the GitHub API, if not supplied, request will be rejected.
-        .header("User-Agent", "RustCred App")
+        .header("User-Agent", APP_NAME)
         .send()?
         .json::<Vec<User>>()?)
 }
@@ -44,18 +45,16 @@ pub fn get_participants() -> Result<Vec<User>, Box<dyn error::Error>> {
 /// Gets the number of merged pull-requests a certain author has for a certain GitHub Repository
 /// TODO: Handle paging
 pub fn prs_for_user(author: &str) -> Result<Vec<PrSearchItem>, Box<dyn error::Error>> {
-    let query = format!(
-        "https://api.github.com/search/issues?q=author:{}+state:closed+is:pr",
-        author
-    );
-    let resp = reqwest::blocking::Client::new()
-        .get(&query)
-        // User-Agent is mandated by the GitHub API, if not supplied, request will be rejected.
-        .header("User-Agent", "RustCred App")
+    Ok(reqwest::blocking::Client::new()
+        .get(&format!(
+            "https://api.github.com/search/issues?q=author:{}+state:closed+is:pr",
+            author
+        ))
+        .header("User-Agent", APP_NAME)
         .header("Accept", "application/vnd.github.cloak-preview")
         .send()?
-        .json::<PrSearchResp>()?;
-    Ok(resp.items)
+        .json::<PrSearchResp>()?
+        .items)
 }
 
 pub fn lines_of(
@@ -63,18 +62,15 @@ pub fn lines_of(
     branch: &str,
     file: &str,
 ) -> Result<Vec<String>, Box<dyn error::Error>> {
-    let query = format!(
-        "https://raw.githubusercontent.com/{}/{}/{}",
-        repo, branch, file
-    );
-    let resp: String = reqwest::blocking::Client::new()
-        .get(&query)
-        // User-Agent is mandated by the GitHub API, if not supplied, request will be rejected.
-        .header("User-Agent", "RustCred App")
+    Ok(reqwest::blocking::Client::new()
+        .get(&format!(
+            "https://raw.githubusercontent.com/{}/{}/{}",
+            repo, branch, file
+        ))
+        .header("User-Agent", APP_NAME)
         .header("Accept", "application/vnd.github.cloak-preview")
         .send()?
-        .text()?;
-    Ok(resp
+        .text()?
         .lines()
         .filter(|s| !s.trim().is_empty())
         .map(|s| String::from(s))
