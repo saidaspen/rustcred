@@ -2,7 +2,6 @@ use std::error;
 
 use serde::Deserialize;
 const APP_NAME: &str = "RustCred";
-const REPO_URL: &str = "https://api.github.com/repos/";
 const USER_PER_PAGE: u32 = 100;
 
 /// User representation of the GitHub API.
@@ -13,6 +12,12 @@ pub struct User {
     pub login: String,
     id: u32,
     url: String,
+}
+
+#[derive(Deserialize, Debug, Clone, PartialEq)]
+pub struct Contribution {
+    pub login: String,
+    pub contributions: u32,
 }
 
 #[derive(Deserialize, Debug)]
@@ -59,6 +64,35 @@ impl GitHubConn {
         }
     }
 
+    pub fn get_contributors(&self, repo: &str) -> Result<Vec<Contribution>, Box<dyn error::Error>> {
+        let mut page: u32 = 0;
+        let mut contribs = vec![];
+        while contribs.len() % USER_PER_PAGE as usize == 0 {
+            page = page + 1;
+            let additional_contribs = &self.get_contribs_page(&repo, page)?;
+            if additional_contribs.len() == 0 {
+                break;
+            }
+            contribs = [&contribs[..], &additional_contribs].concat();
+        }
+        Ok(contribs)
+    }
+
+    fn get_contribs_page(
+        &self,
+        repo: &str,
+        page: u32,
+    ) -> Result<Vec<Contribution>, Box<dyn error::Error>> {
+        let url = &format!(
+            "{}/repos/{}/contributors?per_page={}&page={}",
+            github_url(),
+            &repo,
+            USER_PER_PAGE,
+            page
+        );
+        Ok(serde_json::from_str(&self.query_gh(url)?)?)
+    }
+
     fn query_gh(&self, url: &String) -> Result<String, Box<dyn error::Error>> {
         Ok(reqwest::blocking::Client::new()
             .get(url)
@@ -98,37 +132,6 @@ impl GitHubConn {
         Ok(serde_json::from_str(&self.query_gh(url)?)?)
     }
 
-    /// Gets the number of merged pull-requests a certain author has for a certain GitHub Repository
-    pub fn merged_prs_for(&self, author: &str) -> Result<Vec<Pr>, Box<dyn error::Error>> {
-        let mut page: u32 = 0;
-        let mut prs = vec![];
-        while prs.len() % USER_PER_PAGE as usize == 0 {
-            page = page + 1;
-            let additional_prs = &self.get_merged_prs_page(&author, page)?;
-            if additional_prs.len() == 0 {
-                break;
-            }
-            prs = [&prs[..], &additional_prs].concat();
-        }
-        Ok(prs)
-    }
-
-    fn get_merged_prs_page(
-        &self,
-        author: &str,
-        page: u32,
-    ) -> Result<Vec<Pr>, Box<dyn error::Error>> {
-        let url = format!(
-            "{}/search/issues?q=author:{}+state:closed+is:merged&per_page={}&page={}",
-            github_url(),
-            author,
-            USER_PER_PAGE,
-            page
-        );
-        let prs: PrSearchResp = serde_json::from_str(&self.query_gh(&url)?.to_string())?;
-        Ok(prs.items)
-    }
-
     pub fn lines_of(&self, branch: &str, file: &str) -> Result<Vec<String>, Box<dyn error::Error>> {
         let url = format!(
             "{}/{}/{}/{}",
@@ -146,23 +149,11 @@ impl GitHubConn {
     }
 }
 
-pub fn repo_name(url: &str) -> String {
-    url[REPO_URL.len()..].to_string()
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::github::{repo_name, GitHubConn, User};
+    use crate::github::{GitHubConn, User};
     use mockito::mock;
     use std::error;
-
-    #[test]
-    fn test_repo_name() {
-        assert_eq!(
-            repo_name("https://api.github.com/repos/saidaspen/rustcred"),
-            "saidaspen/rustcred"
-        );
-    }
 
     fn mock_with(url: &str, body: &str) -> mockito::Mock {
         mock("GET", url)
@@ -170,35 +161,6 @@ mod tests {
             .with_header("content-type", "application/json; charset=utf-8")
             .with_body(body)
             .create()
-    }
-
-    #[test]
-    fn gets_pr_for_user_w_paging() -> Result<(), Box<dyn error::Error>> {
-        let conn = GitHubConn::new("test".to_string(), "saidaspen/rustcred".to_string());
-        let pr = "{\"url\": \"someurl\", \"repository_url\": \"repo_url\", \"id\": 123, \"state\": \"closed\", \"score\":1.0}";
-        let prs_first = vec![pr; 100];
-        let first_page = format!(
-            "{{\"total_count\":{}, \"items\":[{}]}}",
-            prs_first.len(),
-            prs_first.join(", ")
-        );
-        let prs_second = vec![pr; 10];
-        let second_page = format!(
-            "{{\"total_count\":{}, \"items\":[{}]}}",
-            prs_second.len(),
-            prs_second.join(", ")
-        );
-        let _m = mock_with(
-            "/search/issues?q=author:saidaspen+state:closed+is:merged&per_page=100&page=1",
-            &first_page,
-        );
-        let _m = mock_with(
-            "/search/issues?q=author:saidaspen+state:closed+is:merged&per_page=100&page=2",
-            &second_page,
-        );
-        let prs = conn.merged_prs_for("saidaspen")?;
-        assert_eq!(prs.len(), 110);
-        Ok(())
     }
 
     #[test]
@@ -218,6 +180,20 @@ mod tests {
         assert_eq!(opted_out_users.len(), 2);
         assert_eq!(opted_out_users[0], "line1");
         assert_eq!(opted_out_users[1], "line2");
+    }
+
+    #[test]
+    fn get_contributors() -> Result<(), Box<dyn error::Error>> {
+        let conn = GitHubConn::new("test".to_string(), "saidaspen/rustcred".to_string());
+        let page: Vec<&str> = vec!["{\"login\": \"testuser\", \"contributions\": 2}"; 99];
+        let page = format!("[{}]\n", &page.join(", "));
+        let _m = mock_with(
+            "/repos/saidaspen/rustcred/contributors?per_page=100&page=1",
+            &page,
+        );
+        let contributors = conn.get_contributors("saidaspen/rustcred")?;
+        assert_eq!(contributors.len(), 99);
+        Ok(())
     }
 
     #[test]

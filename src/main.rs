@@ -1,10 +1,10 @@
 mod github;
-use github::{repo_name, GitHubConn, User};
+use github::{Contribution, GitHubConn, User};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
 
-const REPO: &str = "paupino/rust-decimal"; //"saidaspen/rustcred";
+const REPO: &str = "saidaspen/rustcred";
 const BRANCH: &str = "master";
 const TOKEN_PROP_NAME: &str = "RC_GITHUB_TOKEN";
 
@@ -38,31 +38,44 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
         .collect();
 
     print_participants(&participants);
-    println!("{}", &participants.len());
 
     // Get all tracked repos
-    let tracked_repos: HashSet<String> = gh
+    let tracked_repos: Vec<String> = gh
         .lines_of(BRANCH, "tracked_repos")
-        .expect("expected to find tracked_repos file")
-        .iter()
-        .map(|repo| format!("https://api.github.com/repos/{}", repo))
-        .collect();
+        .expect("expected to find tracked_repos file");
 
-    for p in participants {
-        let prs = gh
-            .merged_prs_for(&p.login)
-            .unwrap_or_else(|e| panic!("unable to get PRs for user {}, error: {} ", p.login, e))
-            .into_iter()
-            .map(|pr| pr.repository_url)
-            .filter(|repo| tracked_repos.contains(repo))
-            .fold(HashMap::new(), |mut map, repo| {
-                *map.entry(repo_name(&repo)).or_insert(0) += 1;
-                map
-            });
-        println!("User: {}", &p.login);
-        println!("--------------------------------");
-        for (k, v) in prs.iter() {
-            println!("{}\t{}", k, v);
+    let participants_set: HashSet<String> =
+        participants.iter().map(|p| p.login.to_string()).collect();
+
+    let mut scores: HashMap<String, HashMap<String, u32>> = HashMap::new();
+    for repo in tracked_repos {
+        let contributions: Vec<Contribution> = gh
+            .get_contributors(&repo)
+            .expect("unable to get contributors for repo")
+            .iter()
+            .filter(|c| participants_set.contains(&c.login))
+            .cloned()
+            .collect();
+        for contrib in contributions {
+            let login = contrib.login.to_string();
+            scores
+                .entry(login.clone())
+                .and_modify(|nested| {
+                    nested.insert(repo.clone(), contrib.contributions);
+                })
+                .or_insert_with(|| {
+                    let mut new_map: HashMap<String, u32> = HashMap::new();
+                    new_map.insert(repo.clone(), contrib.contributions);
+                    new_map
+                });
+        }
+    }
+
+    for (user, score) in scores.iter() {
+        println!("{}", user);
+        println!("--------------------------");
+        for (repo, contribs) in score {
+            println!("{}\t{}", repo, contribs);
         }
     }
     //
