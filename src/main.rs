@@ -34,7 +34,7 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
     let participants: Vec<User> = participants
         .iter()
         .filter(|p| !opted_out.contains(&p.login))
-        .map(|x| x.clone())
+        .cloned()
         .collect();
 
     print_participants(&participants);
@@ -47,6 +47,13 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
     let participants_set: HashSet<String> =
         participants.iter().map(|p| p.login.to_string()).collect();
 
+    // scores will hold all the contributions a github user has done per repo
+    // for example (in some kind of pseudo notation):
+    // saidaspen -> {
+    //              {saidaspen/rustcred -> 11},
+    //              {rust-lang/rustlings -> 2}
+    //              }
+    //
     let mut scores: HashMap<String, HashMap<String, u32>> = HashMap::new();
     for repo in tracked_repos {
         let contributions: Vec<Contribution> = gh
@@ -70,22 +77,11 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
                 });
         }
     }
-
-    for (user, score) in scores.iter() {
-        println!("{}", user);
-        println!("--------------------------");
-        for (repo, contribs) in score {
-            println!("{}\t{}", repo, contribs);
-        }
-    }
-    //
-    // Generate HTML page for overview
-    // For each user {
-    //  Generate HTML for user
-    // }
+    // TODO: Generate HTML page for overview
+    // TODO: For each user - Generate HTML:w
 }
 
-fn print_participants(participants: &Vec<User>) {
+fn print_participants(participants: &[User]) {
     println!(
         "All participants (after filtering): {:?}",
         participants
