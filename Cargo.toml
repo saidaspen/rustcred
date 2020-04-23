@@ -7,5 +7,8 @@ edition = "2018"
 [dependencies]
 serde = { version = "1.0.106", features = ["derive"]}
 reqwest = {version = "0.10.4", features = ["blocking", "json"]}
-mockito = "0.25.1"
 serde_json = "1.0.51"
+
+[dev-dependencies]
+mockito = "0.25.1"
+
