@@ -78,7 +78,7 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
         }
     }
     // TODO: Generate HTML page for overview
-    // TODO: For each user - Generate HTML:w
+    // TODO: For each user - Generate HTML
 }
 
 fn print_participants(participants: &[User]) {
