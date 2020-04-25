@@ -2,3 +2,4 @@
 **/*.rs.bk
 .idea
 *.iml
+custom_bulma/node_modules/

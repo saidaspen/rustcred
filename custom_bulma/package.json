@@ -10,8 +10,8 @@
     "node-sass": "^4.14.0"
   },
   "scripts": {
-   "css-build": "node-sass --omit-source-map-url sass/rustcred.scss css/rustcred.css --output-style compressed",
-   "css-watch": "npm run css-build -- --watch",
-   "start": "npm run css-watch"
+    "css-build": "node-sass --omit-source-map-url sass/rustcred.scss css/rustcred.css --output-style compressed",
+    "css-watch": "npm run css-build -- --watch",
+    "start": "npm run css-watch"
   }
 }
