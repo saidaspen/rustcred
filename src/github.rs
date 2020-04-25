@@ -10,7 +10,6 @@ const USER_PER_PAGE: u32 = 100;
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct User {
     pub login: String,
-    id: u32,
     url: String,
 }
 
@@ -18,21 +17,6 @@ pub struct User {
 pub struct Contribution {
     pub login: String,
     pub contributions: u32,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct PrSearchResp {
-    total_count: u32,
-    items: Vec<Pr>,
-}
-
-#[derive(Deserialize, Debug, Clone)]
-pub struct Pr {
-    pub url: String,
-    pub repository_url: String,
-    id: u32,
-    state: String,
-    score: f64,
 }
 
 fn github_url() -> String {
@@ -58,19 +42,16 @@ pub struct GitHubConn {
 
 impl GitHubConn {
     pub fn new(token: String, repo: String) -> GitHubConn {
-        GitHubConn {
-            token: token,
-            repo: repo,
-        }
+        GitHubConn { token, repo }
     }
 
     pub fn get_contributors(&self, repo: &str) -> Result<Vec<Contribution>, Box<dyn error::Error>> {
         let mut page: u32 = 0;
         let mut contribs = vec![];
         while contribs.len() % USER_PER_PAGE as usize == 0 {
-            page = page + 1;
+            page += 1;
             let additional_contribs = &self.get_contribs_page(&repo, page)?;
-            if additional_contribs.len() == 0 {
+            if additional_contribs.is_empty() {
                 break;
             }
             contribs = [&contribs[..], &additional_contribs].concat();
@@ -93,7 +74,7 @@ impl GitHubConn {
         Ok(serde_json::from_str(&self.query_gh(url)?)?)
     }
 
-    fn query_gh(&self, url: &String) -> Result<String, Box<dyn error::Error>> {
+    fn query_gh(&self, url: &str) -> Result<String, Box<dyn error::Error>> {
         Ok(reqwest::blocking::Client::new()
             .get(url)
             .header("User-Agent", APP_NAME)
@@ -111,9 +92,9 @@ impl GitHubConn {
         let mut page: u32 = 0;
         let mut users = vec![];
         while users.len() % USER_PER_PAGE as usize == 0 {
-            page = page + 1;
+            page += 1;
             let additional_users = &self.get_participants_page(page)?;
-            if additional_users.len() == 0 {
+            if additional_users.is_empty() {
                 break;
             }
             users = [&users[..], &additional_users].concat();
@@ -201,8 +182,7 @@ mod tests {
         let conn = GitHubConn::new("test".to_string(), "saidaspen/rustcred".to_string());
         let first_page = format!(
             "[{}]\n",
-            vec!["{\"login\": \"user\", \"id\": 1, \"url\": \"https://someuserurl\"}"; 100]
-                .join(", ")
+            vec!["{\"login\": \"user\", \"url\": \"https://someuserurl\"}"; 100].join(", ")
         );
         let _m = mock_with(
             "/repos/saidaspen/rustcred/stargazers?per_page=100&page=1",
@@ -220,8 +200,8 @@ mod tests {
     fn get_participants_paging() -> Result<(), Box<dyn error::Error>> {
         let conn = GitHubConn::new("test".to_string(), "saidaspen/rustcred".to_string());
         let mut page: Vec<&str> =
-            vec!["{\"login\": \"user\", \"id\": 1, \"url\": \"https://someuserurl\"}"; 99];
-        let other_user = "{\"login\": \"other_user\", \"id\": 2, \"url\": \"https://someuserurl\"}";
+            vec!["{\"login\": \"user\", \"url\": \"https://someuserurl\"}"; 99];
+        let other_user = "{\"login\": \"other_user\", \"url\": \"https://someuserurl\"}";
         page.push(other_user);
         let first_page = format!("[{}]\n", &page.join(", "));
         let second_page = format!("[{}]\n", &page.join(", "));
@@ -244,7 +224,6 @@ mod tests {
             participants[0],
             User {
                 login: "user".to_string(),
-                id: 1,
                 url: "https://someuserurl".to_string(),
             }
         );
@@ -252,7 +231,6 @@ mod tests {
             participants[99],
             User {
                 login: "other_user".to_string(),
-                id: 2,
                 url: "https://someuserurl".to_string(),
             }
         );
@@ -260,7 +238,6 @@ mod tests {
             participants[201],
             User {
                 login: "other_user".to_string(),
-                id: 2,
                 url: "https://someuserurl".to_string(),
             }
         );
