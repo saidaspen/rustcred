@@ -1,0 +1,89 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RustCred</title>
+    <link rel="shortcut icon" href="../images/fav_icon.png" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="css/rustcred.css">
+</head>
+<body> 
+    <header>
+        <div>
+            <h1 class="global">&#x1F980; RustCred</h1>
+            <nav>
+                <ul>
+                    <li>
+                        [<a href="index.html">Scores</a>]
+                    </li>
+                    <li>
+                        [About]
+                    </li>
+                    <li>
+                        [<a href="trackedrepos.html">Tracked Repos</a>]
+                    </li>
+
+                    <li>
+                        [<a href="https://github.com/saidaspen/rustcred">View Soure</a>]
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        <div>
+            <i>updated: 25th of April 2020</i>
+        </div>
+    </header>
+
+    <article>
+        
+        <h1>About</h1>
+        <p>
+        <em>RustCred</em> was my first Rust project. <i>"Rust Project?!"</i>, you might ask yourself, <i>"But this is just simple HTLM?"</i>... Yes, you are right.
+        The real project is the back-end that generate the content for these pages. It's a small Rust application that queries GitHub for data and then populates the HTML.</br>
+        
+        My name is <em>Said Aspen</em> and I mainly do Java programming by day. I got the urge to learn Rust and got started reading The Book. After a couple of days of reading I found myself bored.<br/>
+        I was learning Rust to code, not to read! So, I decided to have a go at a small app. And <i>voilá</i>, this is it.
+        </p>
+
+        <p>
+        <em>This is meant to be fun.</em> It is meant to inspire you to contribute to Rust Open Source. Don't take it too seriously.<br/>
+        </p>
+        <h1>How does it work?</h1>
+        <p>
+        The scores list is updated once per day. 
+        Basically, gives you one award per repo, out of the <a href="trackedrepos.html">tracked repos</a>, that you have contributed to. You get a balloon, a silver medal or a gold medal depending on how many contributions you have to that repo. <br/>
+        <ul>
+            <li>1 contribution gives a &#x1F388;</li>
+            <li>5 contribution gives a &#x1F948;</li>
+            <li>10 contribution gives a &#x1F947;</li>
+        </ul>
+        </p>
+
+        <h1>How do I join?</h1>
+        <p>
+        Simple! Just <em>star the <a href="https://github.com/saidaspen/rustcred">RustCred repo on github</a></em>, and your name will pop-up on the scores list tomorrow.
+        </p>
+        
+        <h1>Opting-out</h1>
+        <p>
+        If you want to star the repo on GitHub, to show me you like the project, but you don't want to end up on the scores list, then you can open a pull-request on the <a href="https://github.com/saidaspen/rustcred">RustCred repo</a> 
+        to add your user name to the <a href="https://github.com/saidaspen/rustcred/blob/master/opted_out">list of users who opted out</a>.
+        Once that is done, your name won't appear anymore on the scores list.
+        </p>
+
+        <h1>Adding repo to tracked repos</h1>
+        <p>
+        If you think a repo is missing create a pull-request on the <a href="https://github.com/saidaspen/rustcred">RustCred repo</a> to add that repo name to the <a href="https://github.com/saidaspen/rustcred/blob/master/tracked_repos">tracked_repos</a> file.
+        Once that is merged, it will be considered for scores counting.
+        </p>
+
+        <h1>Why does this page look so much like Advent of Code?</h1>
+        I just love <a href="https://adventofcode.com">Advent of Code</a>. It is the highlight of the year. I strongly recommend participating, and trying to solve some of it's nuggets of programming exercises. <br/>
+        Try to do them in Rust, it's a challenge, but perfectly doable!
+   </article>
+</body>
+</html>
+
+

@@ -6,74 +6,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RustCred</title>
     <link rel="shortcut icon" href="../images/fav_icon.png" type="image/x-icon">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@300&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="css/rustcred.css">
-    <link rel="stylesheet" type="text/css" href="css/landing.css">
 </head>
-
 <body> 
-    <section class="hero is-primary">
-        <div class="hero-head">
-            <nav class="navbar">
-                <div class="container">
-                    <div class="navbar-brand">
-                        <a class="navbar-item" href="../">
-                            <img src="img/rustcred.png" alt="Logo">
-                        </a>
-                        <span class="navbar-burger burger" data-target="navbarMenu">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </span>
-                    </div>
-                    <div id="navbarMenu" class="navbar-menu">
-                        <div class="navbar-end">
-                            <span class="navbar-item">
-                                <a class="button is-white is-outlined" href="#scores">
-                                    <span class="icon">
-                                        <i class="fa fa-home"></i>
-                                    </span>
-                                    <span>Scores</span>
-                                </a>
-                            </span>
-                            <span class="navbar-item">
-                                <a class="button is-white is-outlined" href="#">
-                                    <span class="icon">
-                                        <i class="fa fa-superpowers"></i>
-                                    </span>
-                                    <span>About</span>
-                                </a>
-                            </span>
-                            <span class="navbar-item">
-                                <a class="button is-white is-outlined" href="https://github.com/saidaspen/rustcred">
-                                    <span class="icon">
-                                        <i class="fa fa-github"></i>
-                                    </span>
-                                    <span>View Source</span>
-                                </a>
-                            </span>
-                        </div>
-                    </div>
-                </div>
+    <header>
+        <div>
+            <h1 class="global">&#x1F980; RustCred</h1>
+            <nav>
+                <ul>
+                    <li>
+                        [Scores]
+                    </li>
+                    <li>
+                        [<a href="about.html">About</a>]
+                    </li>
+                    <li>
+                        [<a href="trackedrepos.html">Tracked Repos</a>]
+                    </li>
+
+                    <li>
+                        [<a href="https://github.com/saidaspen/rustcred">View Soure</a>]
+                    </li>
+                </ul>
             </nav>
-            </div>
-
-    </section>
-    <section class="hero is-primary">
-      <div class="hero-body">
-        <div class="container">
-          <h1 class="title" id="scores">
-              Scores
-          </h1>
-          <h2 class="subtitle">
-            RustCred - Rust Open Source Contributions Score as of 2020-04-25
-          </h2>
         </div>
-      </div>
-    </section>
+        <div>
+            <i>updated: 25th of April 2020</i>
+        </div>
+    </header>
 
+    <article>
+        <p>
+        Open Source is not a competition. Well actually, at <em>RustCred</em>, it is...
+        </p>
+        <p>
+        For every repo, out of the <a href="trackedrepos.html">tracked repos</a>, that you contribute to, you get a special award.
+        <ul>
+            <li>1 contribution gives a &#x1F388;</li>
+            <li>5 contribution gives a &#x1F948;</li>
+            <li>10 contribution gives a &#x1F947;</li>
+        </ul>
+        That's it! <br/>
+        </p>
+        <p>
+        </p>
+        <p>
+        Oh, wait, there are also special, honorary, achievements to be unlocked! These are special awards given to special people for special achievements. 
+        </p>
+        <p>
+        So, enough talking, go out and contribute to <em>Rust Open Source repos on GitHub</em>, and come back and check your score tomorrow!
+        </p>
+
+        <h1>Scores<h1>
+        <div>
+            <table class="unstyledTable">
+                <thead>
+                    <tr>
+                        <th>GitHub Username</th>
+                        <th>Achievements</th>
+                        <th>Gold</th>
+                        <th>Silver</th>
+                        <th>Balloon</th>
+                        <th># contributions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="https://github.com/saidaspen">saidaspen</a></td>
+                        <td> - </td>
+                        <td>&#x1F947;&#x1F947;&#x1F947;</td>
+                        <td>&#x1F948;</td>
+                        <td>&#x1F388;</td>
+                        <td>17</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </article>
 </body>
-
 </html>
 
 
