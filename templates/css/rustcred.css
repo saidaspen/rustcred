@@ -5,10 +5,7 @@ body {
   font-size: 16pt;
   min-width: 60em;
 }
-img { border:0; }
 a { outline:0; }
-main, figure, figcaption { display:block; }
-pre, code { font-family: "Inconsolata", monospace; }
 header, main {
   -webkit-text-size-adjust: none;
 }
@@ -27,9 +24,6 @@ table.unstyledTable thead {
 table.unstyledTable thead th {
   font-size: 16pt;
   font-weight: normal;
-}
-table.unstyledTable tfoot {
-  font-weight: bold;
 }
 
 a {
@@ -56,16 +50,6 @@ header h1 {
   margin: 0;
   padding-right: 1em;
 }
-header h1 a, header h1 span {
-  display: inline-block;
-  text-decoration: none;
-  color: #00cc00;
-  text-shadow: 0 0 2px #00cc00, 0 0 5px #00cc00;
-}
-header h1 a:hover, header h1 a:focus {
-  color: #99ff99;
-  text-shadow: 0 0 2px #99ff99, 0 0 5px #99ff99;
-}
 header nav {
   display: inline-block;
 }
@@ -85,43 +69,18 @@ header nav a {
   outline: none;
 }
 
-*::-moz-focus-inner {
-  padding: 0;
-  border: 0
-}
-
 article {
   width: 45em;
   margin-bottom: 2em;
   margin-top: 2em;
-}
-article:first-child {
-  margin-top: 0;
-}
-article h2 {
-  color: #ffffff;
-  margin-top: 1em;
-  margin-bottom: 1em;
-  white-space: nowrap;
-}
-article h2 + * {
-  margin-top: 0;
 }
 article em {
   color: #000000;
   background: #efefef;
   font-style: normal;
 }
-article em.star {
-  color: #ffff66;
-  font-style: normal;
-  text-shadow: 0 0 5px #ffff66;
-}
 article a {
   white-space: nowrap;
-}
-article .aside {
-  opacity: .6;
 }
 article ul {
   list-style-type: none;
