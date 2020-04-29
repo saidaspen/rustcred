@@ -37,7 +37,7 @@ If you want to star the repo on GitHub, to show me you like the project, but you
 If you think a repo is missing create a pull-request on the RustCred repo to add that repo name to the tracked_repos file. Once that is merged, it will be considered for scores counting. 
 
 ### Why does this page look so much like Advent of Code?
-I just love Advent of Code. It is the highlight of the year. I strongly recommend participating and trying to solve some of its nuggets of programming exercises.
+I just love [Advent of Code](https::/adventofcode.com). It is the highlight of the year. I strongly recommend participating and trying to solve some of its nuggets of programming exercises.
 Try to do them in Rust, it's a challenge, but perfectly doable!
 
 ## Disclaimer
