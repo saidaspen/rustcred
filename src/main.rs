@@ -166,7 +166,6 @@ fn main() {
     println!("[7/11] Sorting scores...");
     scores.sort_by(|a, b| b.rust_cred.cmp(&a.rust_cred));
 
-    println!("{:?}", scores);
     let mut tera = match Tera::new(format!("{}/*.html", templates_dir).as_ref()) {
         Ok(t) => t,
         Err(e) => {
