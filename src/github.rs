@@ -32,25 +32,20 @@ fn github_url() -> String {
     mockito::server_url()
 }
 
-/// Get the github URL used for getting file contents
-/// Returns a different url for testing
-fn raw_content_github_url() -> String {
-    #[cfg(not(test))]
-    return String::from("https://raw.githubusercontent.com");
-
-    #[cfg(test)]
-    mockito::server_url()
-}
-
 /// GitHubConn represents one RustCred "connection" to the GitHub API.
 pub struct GitHubConn {
+    pub github_user: String,
     pub token: String,
     pub repo: String,
 }
 
 impl GitHubConn {
-    pub fn new(token: String, repo: String) -> GitHubConn {
-        GitHubConn { token, repo }
+    pub fn new(token: String, github_user: String, repo: String) -> GitHubConn {
+        GitHubConn {
+            token,
+            github_user,
+            repo,
+        }
     }
 
     /// Query the GitHub API using the given URL, will use the provided developer token.
@@ -59,7 +54,7 @@ impl GitHubConn {
         Ok(reqwest::blocking::Client::new()
             .get(url)
             .header("User-Agent", APP_NAME)
-            .header("Authorization", &self.token)
+            .basic_auth(&self.github_user, Some(&self.token.to_owned()))
             .header("Accept", "application/vnd.github.cloak-preview")
             .send()?
             .text()?)
@@ -124,27 +119,8 @@ impl GitHubConn {
             USER_PER_PAGE,
             page
         );
-        Ok(serde_json::from_str(&self.query_gh(url)?)?)
-    }
-
-    /// lines_of returns the raw content of a specific file, as a vector of lines, for a specific branch, for the repo
-    /// given by its GitHubConn.
-    /// Empty lines are removed, as are lines starting with #
-    pub fn lines_of(&self, branch: &str, file: &str) -> Result<Vec<String>, Box<dyn error::Error>> {
-        let url = format!(
-            "{}/{}/{}/{}",
-            raw_content_github_url(),
-            &self.repo,
-            branch,
-            file
-        );
-        Ok(self
-            .query_gh(&url)?
-            .lines()
-            .filter(|s| !s.trim().is_empty())
-            .map(|s| String::from(s.trim()))
-            .filter(|s| !s.starts_with('#'))
-            .collect::<Vec<String>>())
+        let result = &self.query_gh(url)?;
+        Ok(serde_json::from_str(result)?)
     }
 }
 
@@ -160,26 +136,6 @@ mod tests {
             .with_header("content-type", "application/json; charset=utf-8")
             .with_body(body)
             .create()
-    }
-
-    #[test]
-    fn gets_lines_of_file() {
-        let conn = GitHubConn::new("test".to_string(), "saidaspen/rustcred".to_string());
-        // Here we also have a newline in the middle to test it does not add those.
-        let body = r#"
-        line1 
-
-        line2 
-        #notincluded
-        "#;
-        let _m = mock_with("/saidaspen/rustcred/master/somefile", &body);
-        let opted_out_users = match conn.lines_of("master", "somefile") {
-            Ok(l) => l,
-            Err(e) => panic!("unable to get opted out users: {:?}", e),
-        };
-        assert_eq!(opted_out_users.len(), 2);
-        assert_eq!(opted_out_users[0], "line1");
-        assert_eq!(opted_out_users[1], "line2");
     }
 
     #[test]

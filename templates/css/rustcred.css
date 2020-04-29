@@ -25,7 +25,15 @@ table.unstyledTable {
 table.unstyledTable td, table.unstyledTable th {
   padding: 5px 10px;
   font-size: 16pt;
+  text-align: left;
 }
+table.unstyledTable td.reponame {
+    text-align: left;
+}
+table.unstyledTable td.count {
+    text-align: right;
+}
+
 table.unstyledTable thead {
   background: #DDDDDD;
   border-bottom: 2px solid #444444;

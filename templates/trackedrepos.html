@@ -47,10 +47,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for tracked_repo, contributions in tracked_repos %}
+                    {% for tracked_repo in tracked_repos %}
                     <tr>
-                        <td><a href="https://github.com/{{tracked_repo}}">{{tracked_repo}}</a></td>
-                        <td>{{contributions}}</td>
+                        <td class="reponame"><a href="https://github.com/{{tracked_repo.0}}">{{tracked_repo.0}}</a></td>
+                        <td class="count">{{tracked_repo.1}}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

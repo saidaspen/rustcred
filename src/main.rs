@@ -1,9 +1,12 @@
 mod github;
+use console::style;
 use github::{Contribution, GitHubConn, User};
+use indicatif::ProgressBar;
 use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
+use std::error;
 use std::fs;
 
 extern crate clap;
@@ -17,8 +20,6 @@ use tera::Context;
 use tera::Tera;
 
 const REPO: &str = "saidaspen/rustcred";
-const BRANCH: &str = "master";
-const TOKEN_PROP_NAME: &str = "RC_GITHUB_TOKEN";
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 /// These are the limits to get a certain mark.
@@ -30,26 +31,12 @@ const SILVER_LIMIT: u32 = 5;
 const BALLOONS_LIMIT: u32 = 1;
 
 fn main() {
-    // The application needs to have the environment property with a valid GitHub API Token.
-    let github_token = match env::var(TOKEN_PROP_NAME) {
-        Ok(s) => s,
-        Err(_) => {
-            println!(
-                r#"Environment property {} not set.
-This needs to be set to your personal access token from GitHub.
-See https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line"#,
-                TOKEN_PROP_NAME
-            );
-            return;
-        }
-    };
-
     let matches = App::new("RustCred")
         .version(VERSION)
         .author("Said Aspen <info@rustcred.dev>")
         .about("Scores for your Rust Open Source contributions")
         .arg(
-            Arg::with_name("output")
+            Arg::with_name("output directory")
                 .short("o")
                 .long("output")
                 .takes_value(true)
@@ -57,28 +44,52 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
                 .help("output directory"),
         )
         .arg(
-            Arg::with_name("templates")
+            Arg::with_name("templates directory")
                 .short("t")
                 .long("templates")
                 .takes_value(true)
                 .required(true)
                 .help("Directory with the input html tempalates"),
         )
+        .arg(
+            Arg::with_name("github token")
+                .short("g")
+                .long("token")
+                .takes_value(true)
+                .required(true)
+                .help("Github Personal Token needed"),
+        )
+        .arg(
+            Arg::with_name("github username")
+                .short("u")
+                .long("user")
+                .takes_value(true)
+                .required(true)
+                .help("Github username needed"),
+        )
         .get_matches();
-    let templates_dir = matches.value_of("templates").expect(""); //Empty expects because these seems to be enforced and handled by Clap
-    let output_dir = matches.value_of("output").expect("");
+    let templates_dir = matches.value_of("templates directory").expect("a"); //Empty expects because these seems to be enforced and handled by Clap
+    let output_dir = matches.value_of("output directory").expect("b");
+    let token = matches.value_of("github token").expect("c");
+    let user = matches.value_of("github username").expect("d");
 
-    let gh = GitHubConn::new(github_token, REPO.to_string());
+    let gh = GitHubConn::new(token.to_string(), user.to_string(), REPO.to_string());
 
     // Get list of participants (everyone who has starred the GitHub Repo)
+    println!("{} Getting participant...", style("[1/11]").bold().dim());
     let participants: Vec<User> = gh.get_participants().expect("Unable to get partricipants.");
 
     // Read the users who has opted out (Everyone in the opted_out file in the GitHub repo)
-    let opted_out: Vec<String> = gh.lines_of(BRANCH, "opted_out").unwrap_or_else(|_| vec![]);
+    println!(
+        "{} Getting opted out users...",
+        style("[2/11]").bold().dim()
+    );
+    let opted_out: Vec<String> = lines_of("opted_out").unwrap_or_else(|_| vec![]);
 
     // Filter out participants who have opted out
     // These are people who wanted to star the repo, but who does not want to show up in the scores
     // list.
+    println!("{} Filtering users...", style("[3/11]").bold().dim());
     let participants: HashSet<String> = participants
         .iter()
         .filter(|p| !opted_out.contains(&p.login))
@@ -88,9 +99,9 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
 
     // Get all tracked repos
     // Each repo is specified on its own line in the tracked_repos file in the GitHub repo.
-    let tracked_repos: Vec<String> = gh
-        .lines_of(BRANCH, "tracked_repos")
-        .expect("expected to find tracked_repos file");
+    println!("{} Getting tracked repos...", style("[4/11]").bold().dim());
+    let tracked_repos: Vec<String> =
+        lines_of("tracked_repos").expect("Unable to read tracked_repos file");
 
     // Scores is mapped from github username to RepoContribution
     let mut scores: HashMap<String, Vec<Contribution>> = HashMap::new();
@@ -99,7 +110,14 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
     // Maps from repo name to number of contributions.
     let mut total_repo_contribs: HashMap<String, u32> = HashMap::new();
 
+    let pb = ProgressBar::new(tracked_repos.len() as u64);
+
+    println!(
+        "{} Getting contributors for repos...",
+        style("[5/11]").bold().dim()
+    );
     for repo in &tracked_repos {
+        total_repo_contribs.insert(repo.clone(), 0);
         let contributions: Vec<Contribution> = gh
             .get_contributors(&repo)
             .expect("unable to get contributors for repo")
@@ -115,12 +133,19 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
                 .or_insert_with(|| vec![contribution.clone()]);
             total_repo_contribs
                 .entry(repo.clone())
-                .and_modify(|contribs| *contribs += 1)
-                .or_insert_with(|| 1);
+                .and_modify(|contribs| *contribs += 1);
         }
+        pb.inc(1);
     }
+    pb.finish_and_clear();
 
+    let mut total_repo_contribs: Vec<(String, u32)> = total_repo_contribs
+        .iter()
+        .map(|(k, v)| (k.to_owned(), *v))
+        .collect();
+    total_repo_contribs.sort_by(|a, b| b.1.cmp(&a.1));
     // Change scores such that it now is a vector of Score sorted by the RustCred
+    println!("{} Mapping scores...", style("[6/11]").bold().dim());
     let mut scores: Vec<Score> = scores
         .iter()
         .map(|(k, v)| {
@@ -146,6 +171,7 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
         .collect();
 
     // Sort the scores by RustCred
+    println!("{} Sorting scores...", style("[7/11]").bold().dim());
     scores.sort();
 
     println!("{:?}", scores);
@@ -158,9 +184,21 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
     };
     tera.autoescape_on(vec![]);
 
+    println!(
+        "{} Rendering trackedrepos.html...",
+        style("[8/11]").bold().dim()
+    );
     let tracked_html = render_tracked_repos(&tera, &total_repo_contribs);
+    println!("{} Rendering about.html...", style("[9/11]").bold().dim());
     let about_html = render_about(&tera);
+    println!("{} Rendering index.html...", style("[10/11]").bold().dim());
     let scores_html = render_scores(&tera, &scores);
+
+    println!(
+        "{} Writing files to {}...",
+        style("[11/11]").bold().dim(),
+        output_dir
+    );
     fs::write(format!("{}/trackedrepos.html", output_dir), tracked_html)
         .expect("unable to write file trackedrepos.html");
     fs::write(format!("{}/about.html", output_dir), about_html)
@@ -194,7 +232,7 @@ fn render_scores(tera: &Tera, scores: &Vec<Score>) -> String {
     }
 }
 
-fn render_tracked_repos(tera: &Tera, total_repo_contribs: &HashMap<String, u32>) -> String {
+fn render_tracked_repos(tera: &Tera, total_repo_contribs: &Vec<(String, u32)>) -> String {
     let mut context = Context::new();
     let now: DateTime<Utc> = Utc::now();
     let f_name = "trackedrepos.html";
@@ -232,4 +270,13 @@ impl PartialOrd for Score {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
+}
+
+fn lines_of(f_name: &str) -> Result<Vec<String>, Box<dyn error::Error>> {
+    Ok(fs::read_to_string(f_name)?
+        .lines()
+        .filter(|s| !s.trim().is_empty())
+        .map(|s| String::from(s.trim()))
+        .filter(|s| !s.starts_with('#'))
+        .collect::<Vec<String>>())
 }
