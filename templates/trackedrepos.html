@@ -27,11 +27,14 @@
                     <li>
                         [<a href="https://github.com/saidaspen/rustcred">View Soure</a>]
                     </li>
+                    <li>
+                        ({{version}})
+                    </li>
                 </ul>
             </nav>
         </div>
         <div>
-            <i>updated: 25th of April 2020</i>
+            <i>updated: {{updated_at}}</i>
         </div>
     </header>
 
@@ -41,16 +44,16 @@
                 <thead>
                     <tr>
                         <th>Repo</th>
-                        <th>Owner</th>
-                        <th># contributions Scored</th>
+                        <th># contributors*</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for tracked_repo, contributions in tracked_repos %}
                     <tr>
-                        <td><a href="https://github.com/saidaspen/rustcred">saidaspen/rustcred</a></td>
-                        <td>saidaspen</td>
-                        <td>17</td>
+                        <td><a href="https://github.com/{{tracked_repo}}">{{tracked_repo}}</a></td>
+                        <td>{{contributions}}</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

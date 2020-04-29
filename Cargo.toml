@@ -8,11 +8,14 @@ edition = "2018"
 serde = { version = "1.0.106", features = ["derive"]}
 reqwest = {version = "0.10.4", features = ["blocking", "json"]}
 serde_json = "1.0.51"
-tera = "1"
-
-[dev-dependencies]
-mockito = "0.25.1"
+clap = "~2.27.0"
+chrono = "0.4"
 
 [dependencies.tera]
 version = "1"
 default-features = false
+
+[dev-dependencies]
+mockito = "0.25.1"
+
+

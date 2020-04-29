@@ -32,7 +32,7 @@
             </nav>
         </div>
         <div>
-            <i>updated: 25th of April 2020</i>
+            <i>updated: {{updated_at}}</i>
         </div>
     </header>
 
@@ -47,7 +47,7 @@
             <li>5 contribution gives a &#x1F948;</li>
             <li>10 contribution gives a &#x1F947;</li>
         </ul>
-        That's it! <br/>
+        That's it!<br/>
         </p>
         <p>
         </p>
@@ -68,18 +68,20 @@
                         <th>Gold</th>
                         <th>Silver</th>
                         <th>Balloon</th>
-                        <th># contributions</th>
+                        <th>RustCred</th>
                     </tr>
                 </thead>
                 <tbody>
+                    {% for score in scores %}
                     <tr>
-                        <td><a href="https://github.com/saidaspen">saidaspen</a></td>
+                        <td><a href="https://github.com/{{score.user}}">{{score.user}}</a></td>
                         <td> - </td>
-                        <td>&#x1F947;&#x1F947;&#x1F947;</td>
-                        <td>&#x1F948;</td>
-                        <td>&#x1F388;</td>
-                        <td>17</td>
+                        <td>{% for i in range(end=score.gold)%}&#x1F947;{% endfor %}</td>
+                        <td>{% for i in range(end=score.silver)%}&#x1F948;{% endfor %}</td>
+                        <td>{% for i in range(end=score.balloons)%}&#x1F388;{% endfor %}</td>
+                        <td>{{score.total_contribs}}</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
