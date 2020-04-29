@@ -18,9 +18,12 @@ pub struct User {
 #[derive(Deserialize, Debug, Clone, PartialEq)]
 pub struct Contribution {
     pub login: String,
-    pub contributions: u32,
+    #[serde(rename(deserialize = "contributions"))]
+    pub num: u32,
 }
 
+/// Get the github main URL
+/// Returns a different url for testing
 fn github_url() -> String {
     #[cfg(not(test))]
     return String::from("https://api.github.com");
@@ -29,6 +32,8 @@ fn github_url() -> String {
     mockito::server_url()
 }
 
+/// Get the github URL used for getting file contents
+/// Returns a different url for testing
 fn raw_content_github_url() -> String {
     #[cfg(not(test))]
     return String::from("https://raw.githubusercontent.com");

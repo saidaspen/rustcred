@@ -1,5 +1,4 @@
 <html>
-
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -28,6 +27,9 @@
                     <li>
                         [<a href="https://github.com/saidaspen/rustcred">View Soure</a>]
                     </li>
+                    <li>
+                        ({{version}})
+                    </li>
                 </ul>
             </nav>
         </div>
@@ -36,7 +38,7 @@
         </div>
     </header>
 
-    <article>
+    <section>
         <p>
         Open Source is not a competition. Well actually, at <em>RustCred</em>, it is...
         </p>
@@ -79,14 +81,12 @@
                         <td>{% for i in range(end=score.gold)%}&#x1F947;{% endfor %}</td>
                         <td>{% for i in range(end=score.silver)%}&#x1F948;{% endfor %}</td>
                         <td>{% for i in range(end=score.balloons)%}&#x1F388;{% endfor %}</td>
-                        <td>{{score.total_contribs}}</td>
+                        <td>{{score.rust_cred}}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-    </article>
+    </section>
 </body>
 </html>
-
-

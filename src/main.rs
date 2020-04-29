@@ -1,5 +1,6 @@
 mod github;
 use github::{Contribution, GitHubConn, User};
+use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
@@ -18,9 +19,18 @@ use tera::Tera;
 const REPO: &str = "saidaspen/rustcred";
 const BRANCH: &str = "master";
 const TOKEN_PROP_NAME: &str = "RC_GITHUB_TOKEN";
-const VERSION: &str = "0.0.1";
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+
+/// These are the limits to get a certain mark.
+/// 10 Contributions is a Gold mark
+/// 5 Contributions is a Silver mark
+/// 1 Contribution is a banlloon
+const GOLD_LIMIT: u32 = 10;
+const SILVER_LIMIT: u32 = 5;
+const BALLOONS_LIMIT: u32 = 1;
 
 fn main() {
+    // The application needs to have the environment property with a valid GitHub API Token.
     let github_token = match env::var(TOKEN_PROP_NAME) {
         Ok(s) => s,
         Err(_) => {
@@ -35,7 +45,7 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
     };
 
     let matches = App::new("RustCred")
-        .version("0.1.0")
+        .version(VERSION)
         .author("Said Aspen <info@rustcred.dev>")
         .about("Scores for your Rust Open Source contributions")
         .arg(
@@ -55,18 +65,20 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
                 .help("Directory with the input html tempalates"),
         )
         .get_matches();
-    let templates_dir = matches.value_of("templates").expect("");
+    let templates_dir = matches.value_of("templates").expect(""); //Empty expects because these seems to be enforced and handled by Clap
     let output_dir = matches.value_of("output").expect("");
 
     let gh = GitHubConn::new(github_token, REPO.to_string());
 
-    // Get participants
+    // Get list of participants (everyone who has starred the GitHub Repo)
     let participants: Vec<User> = gh.get_participants().expect("Unable to get partricipants.");
 
-    // Read the users who has opted out
+    // Read the users who has opted out (Everyone in the opted_out file in the GitHub repo)
     let opted_out: Vec<String> = gh.lines_of(BRANCH, "opted_out").unwrap_or_else(|_| vec![]);
 
     // Filter out participants who have opted out
+    // These are people who wanted to star the repo, but who does not want to show up in the scores
+    // list.
     let participants: HashSet<String> = participants
         .iter()
         .filter(|p| !opted_out.contains(&p.login))
@@ -74,14 +86,17 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
         .map(|p| p.login)
         .collect();
 
-    println!("All participants: {:?}", &participants);
-
     // Get all tracked repos
+    // Each repo is specified on its own line in the tracked_repos file in the GitHub repo.
     let tracked_repos: Vec<String> = gh
         .lines_of(BRANCH, "tracked_repos")
         .expect("expected to find tracked_repos file");
 
-    let mut scores: HashMap<String, Vec<RepoContribution>> = HashMap::new();
+    // Scores is mapped from github username to RepoContribution
+    let mut scores: HashMap<String, Vec<Contribution>> = HashMap::new();
+
+    // Keeps track of the number of RustCred participants who has contributed to a specific repo.
+    // Maps from repo name to number of contributions.
     let mut total_repo_contribs: HashMap<String, u32> = HashMap::new();
 
     for repo in &tracked_repos {
@@ -92,36 +107,32 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
             .filter(|c| participants.contains(&c.login))
             .cloned()
             .collect();
-        for contrib in contributions {
-            let login = contrib.login.to_string();
+        for contribution in contributions {
+            let login = contribution.login.to_string();
+            scores
+                .entry(login)
+                .and_modify(|usr_contribs| usr_contribs.push(contribution.clone()))
+                .or_insert_with(|| vec![contribution.clone()]);
             total_repo_contribs
                 .entry(repo.clone())
-                .and_modify(|contribs| {
-                    *contribs += 1;
-                })
+                .and_modify(|contribs| *contribs += 1)
                 .or_insert_with(|| 1);
-            scores
-                .entry(login.clone())
-                .and_modify(|repo_contribs| {
-                    repo_contribs.push(RepoContribution::new(repo.clone(), contrib.contributions));
-                })
-                .or_insert_with(|| {
-                    vec![RepoContribution::new(repo.clone(), contrib.contributions)]
-                });
         }
     }
-    let scores = scores
+
+    // Change scores such that it now is a vector of Score sorted by the RustCred
+    let mut scores: Vec<Score> = scores
         .iter()
         .map(|(k, v)| {
             let mut gold = 0;
             let mut silver = 0;
             let mut balloons = 0;
             for c in v {
-                match c.contributions {
-                    n if n >= 10 => gold += 1,
-                    n if n >= 5 => silver += 1,
-                    n if n >= 1 => balloons += 1,
-                    _ => {}
+                match c.num {
+                    n if n >= GOLD_LIMIT => gold += 1,
+                    n if n >= SILVER_LIMIT => silver += 1,
+                    n if n >= BALLOONS_LIMIT => balloons += 1,
+                    _ => (),
                 };
             }
             Score {
@@ -129,10 +140,15 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
                 gold,
                 silver,
                 balloons,
-                total_contribs: gold * 10 + silver * 5 + balloons,
+                rust_cred: gold * GOLD_LIMIT + silver * SILVER_LIMIT + balloons * BALLOONS_LIMIT,
             }
         })
         .collect();
+
+    // Sort the scores by RustCred
+    scores.sort();
+
+    println!("{:?}", scores);
     let mut tera = match Tera::new(format!("{}/*.html", templates_dir).as_ref()) {
         Ok(t) => t,
         Err(e) => {
@@ -156,57 +172,64 @@ See https://help.github.com/en/github/authenticating-to-github/creating-a-person
 fn render_about(tera: &Tera) -> String {
     let mut context = Context::new();
     let now: DateTime<Utc> = Utc::now();
+    let f_name = "about.html";
     context.insert("updated_at", &format!("{}", &now.format("%b %e, %Y")));
     context.insert("version", VERSION);
-    match tera.render("about.html", &context) {
+    match tera.render(f_name, &context) {
         Ok(s) => s,
-        Err(e) => panic!("Unable to render file. {}", e),
+        Err(e) => panic!("Unable to render file {}. Reason: {}", f_name, e),
     }
 }
 
 fn render_scores(tera: &Tera, scores: &Vec<Score>) -> String {
     let mut context = Context::new();
     let now: DateTime<Utc> = Utc::now();
+    let f_name = "index.html";
     context.insert("updated_at", &format!("{}", &now.format("%b %e, %Y")));
     context.insert("scores", &scores);
     context.insert("version", VERSION);
-    match tera.render("index.html", &context) {
+    match tera.render(f_name, &context) {
         Ok(s) => s,
-        Err(e) => panic!("Unable to render file. {}", e),
+        Err(e) => panic!("Unable to render file {}. Reason: {}", f_name, e),
     }
 }
 
 fn render_tracked_repos(tera: &Tera, total_repo_contribs: &HashMap<String, u32>) -> String {
     let mut context = Context::new();
     let now: DateTime<Utc> = Utc::now();
+    let f_name = "trackedrepos.html";
     context.insert("tracked_repos", &total_repo_contribs);
     context.insert("updated_at", &format!("{}", &now.format("%b %e, %Y")));
     context.insert("version", VERSION);
-    match tera.render("trackedrepos.html", &context) {
+    match tera.render(f_name, &context) {
         Ok(s) => s,
-        Err(e) => panic!("Unable to render file. {}", e),
+        Err(e) => panic!("Unable to render file {}. Reason: {:?}", f_name, e),
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, PartialEq)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Eq)]
 struct Score {
     user: String,
-    gold: usize,
-    silver: usize,
-    balloons: usize,
-    total_contribs: usize,
+    gold: u32,
+    silver: u32,
+    balloons: u32,
+    rust_cred: u32,
 }
 
-struct RepoContribution {
-    repo: String,
-    contributions: u32,
+impl Ord for Score {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.rust_cred.cmp(&other.rust_cred)
+    }
 }
 
-impl RepoContribution {
-    fn new(repo: String, contributions: u32) -> RepoContribution {
-        RepoContribution {
-            repo,
-            contributions,
-        }
+impl PartialEq for Score {
+    fn eq(&self, other: &Self) -> bool {
+        self.rust_cred == other.rust_cred
+    }
+}
+
+impl PartialOrd for Score {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
     }
 }

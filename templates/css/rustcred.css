@@ -2,10 +2,19 @@ body {
   background: #ffffff;
   color: #000000;
   font-family: "Roboto Mono", monospace;
-  font-size: 16pt;
-  min-width: 60em;
+  font-size: 14pt;
 }
-a { outline:0; }
+a {
+  outline:0; 
+  text-decoration: none;
+  color: #035aa6;
+  font-weight: bold;
+}
+a:hover, a:focus {
+  color: #40bad5;
+  font-weight: bold;
+}
+
 header, main {
   -webkit-text-size-adjust: none;
 }
@@ -26,71 +35,73 @@ table.unstyledTable thead th {
   font-weight: normal;
 }
 
-a {
-  text-decoration: none;
-  color: #218380;
-  font-weight: bold;
-}
-a:hover, a:focus {
-  color: #8F2D56;
-  font-weight: bold;
-}
-h1, h2 {
+h1 {
   font-size: 1em;
   font-weight: bold;
 }
+
 header {
   white-space: nowrap;
   cursor: default;
   z-index: 100;
   margin-bottom: 2em;
 }
+
 header h1 {
   display: inline-block;
   margin: 0;
   padding-right: 1em;
 }
+
 header nav {
   display: inline-block;
 }
+
 header nav ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
   display: inline-block;
 }
+
 header nav li {
   display: inline-block;
   padding: 0 .6em;
 }
+
 header nav a {
   display: inline-block;
   text-decoration: none;
   outline: none;
 }
 
-article {
-  width: 45em;
-  margin-bottom: 2em;
-  margin-top: 2em;
+section {
+  width: 50em;
+  margin-bottom: 3em;
+  margin-top: 3em;
 }
-article em {
-  color: #000000;
+
+section em {
+  color: #bb3b0e;
   background: #efefef;
   font-style: normal;
 }
-article a {
+
+section a {
   white-space: nowrap;
 }
-article ul {
+
+section ul {
   list-style-type: none;
   padding: 0;
 }
-article li {
-  padding-left: 2.5em;
+
+section li {
+  padding-left: 3em;
   position: relative;
 }
-article li:before {
+
+section li:before {
   content: "\00a0\00a0-\00a0";
   position: absolute;
   left: 0;
