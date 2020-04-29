@@ -1,8 +1,6 @@
 mod github;
-use console::style;
 use github::{Contribution, GitHubConn, User};
 use indicatif::ProgressBar;
-use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
@@ -76,20 +74,17 @@ fn main() {
     let gh = GitHubConn::new(token.to_string(), user.to_string(), REPO.to_string());
 
     // Get list of participants (everyone who has starred the GitHub Repo)
-    println!("{} Getting participant...", style("[1/11]").bold().dim());
+    println!("[1/11] Getting participant...");
     let participants: Vec<User> = gh.get_participants().expect("Unable to get partricipants.");
 
     // Read the users who has opted out (Everyone in the opted_out file in the GitHub repo)
-    println!(
-        "{} Getting opted out users...",
-        style("[2/11]").bold().dim()
-    );
+    println!("[2/11] Getting opted out users...");
     let opted_out: Vec<String> = lines_of("opted_out").unwrap_or_else(|_| vec![]);
 
     // Filter out participants who have opted out
     // These are people who wanted to star the repo, but who does not want to show up in the scores
     // list.
-    println!("{} Filtering users...", style("[3/11]").bold().dim());
+    println!("[3/11] Filtering users...");
     let participants: HashSet<String> = participants
         .iter()
         .filter(|p| !opted_out.contains(&p.login))
@@ -99,7 +94,7 @@ fn main() {
 
     // Get all tracked repos
     // Each repo is specified on its own line in the tracked_repos file in the GitHub repo.
-    println!("{} Getting tracked repos...", style("[4/11]").bold().dim());
+    println!("[4/11] Getting tracked repos...");
     let tracked_repos: Vec<String> =
         lines_of("tracked_repos").expect("Unable to read tracked_repos file");
 
@@ -112,10 +107,7 @@ fn main() {
 
     let pb = ProgressBar::new(tracked_repos.len() as u64);
 
-    println!(
-        "{} Getting contributors for repos...",
-        style("[5/11]").bold().dim()
-    );
+    println!("[5/11] Getting contributors for repos...");
     for repo in &tracked_repos {
         total_repo_contribs.insert(repo.clone(), 0);
         let contributions: Vec<Contribution> = gh
@@ -145,7 +137,7 @@ fn main() {
         .collect();
     total_repo_contribs.sort_by(|a, b| b.1.cmp(&a.1));
     // Change scores such that it now is a vector of Score sorted by the RustCred
-    println!("{} Mapping scores...", style("[6/11]").bold().dim());
+    println!("[6/11] Mapping scores...");
     let mut scores: Vec<Score> = scores
         .iter()
         .map(|(k, v)| {
@@ -171,8 +163,8 @@ fn main() {
         .collect();
 
     // Sort the scores by RustCred
-    println!("{} Sorting scores...", style("[7/11]").bold().dim());
-    scores.sort();
+    println!("[7/11] Sorting scores...");
+    scores.sort_by(|a, b| b.rust_cred.cmp(&a.rust_cred));
 
     println!("{:?}", scores);
     let mut tera = match Tera::new(format!("{}/*.html", templates_dir).as_ref()) {
@@ -184,21 +176,14 @@ fn main() {
     };
     tera.autoescape_on(vec![]);
 
-    println!(
-        "{} Rendering trackedrepos.html...",
-        style("[8/11]").bold().dim()
-    );
+    println!("[8/11] Rendering trackedrepos.html...");
     let tracked_html = render_tracked_repos(&tera, &total_repo_contribs);
-    println!("{} Rendering about.html...", style("[9/11]").bold().dim());
+    println!("[9/11] Rendering about.html...");
     let about_html = render_about(&tera);
-    println!("{} Rendering index.html...", style("[10/11]").bold().dim());
+    println!("[10/11] Rendering index.html...");
     let scores_html = render_scores(&tera, &scores);
 
-    println!(
-        "{} Writing files to {}...",
-        style("[11/11]").bold().dim(),
-        output_dir
-    );
+    println!("[11/11] Writing files to {}...", output_dir);
     fs::write(format!("{}/trackedrepos.html", output_dir), tracked_html)
         .expect("unable to write file trackedrepos.html");
     fs::write(format!("{}/about.html", output_dir), about_html)
@@ -245,31 +230,13 @@ fn render_tracked_repos(tera: &Tera, total_repo_contribs: &Vec<(String, u32)>) -
     }
 }
 
-#[derive(serde::Deserialize, serde::Serialize, Debug, Clone, Eq)]
+#[derive(serde::Deserialize, serde::Serialize, Debug, Clone)]
 struct Score {
     user: String,
     gold: u32,
     silver: u32,
     balloons: u32,
     rust_cred: u32,
-}
-
-impl Ord for Score {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.rust_cred.cmp(&other.rust_cred)
-    }
-}
-
-impl PartialEq for Score {
-    fn eq(&self, other: &Self) -> bool {
-        self.rust_cred == other.rust_cred
-    }
-}
-
-impl PartialOrd for Score {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
 }
 
 fn lines_of(f_name: &str) -> Result<Vec<String>, Box<dyn error::Error>> {

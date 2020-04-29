@@ -11,7 +11,6 @@ serde_json = "1.0.51"
 clap = "~2.27.0"
 chrono = "0.4"
 indicatif = "0.14.0"
-console = "0.11.2"
 hyper = "0.13.5"
 
 [dependencies.tera]
