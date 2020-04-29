@@ -1,13 +1,13 @@
 # 🦀 RustCred
 Open Source is not a competition. Well actually, at RustCred, it is...
-It's a small Rust application that queries GitHub for data and then populates the HTML that is the npublished to [https:://rustcred.dev](https://rustcred.dev).
+It's a small Rust application that queries GitHub for data and then populates the HTML that is published to [https:://rustcred.dev](https://rustcred.dev).
 
 The main idea is to generate a score for contributing to Rust related open source projects. It's not serious, it's just for fun.
 
 This is meant to be fun. It is meant to inspire you to contribute to Rust Open Source. Don't take it too seriously.
 
 ## Running this yourself
-If you, for some reason want to fork this repo and use it for something else, here are some instructions on how its used:
+If you, for some reason want to fork this repo and use it for something else, here are some instructions on how it is used:
 
 Build the repo using:
 ```
@@ -37,10 +37,10 @@ If you want to star the repo on GitHub, to show me you like the project, but you
 If you think a repo is missing create a pull-request on the RustCred repo to add that repo name to the tracked_repos file. Once that is merged, it will be considered for scores counting. 
 
 ### Why does this page look so much like Advent of Code?
-I just love Advent of Code. It is the highlight of the year. I strongly recommend participating, and trying to solve some of it's nuggets of programming exercises.
+I just love Advent of Code. It is the highlight of the year. I strongly recommend participating and trying to solve some of its nuggets of programming exercises.
 Try to do them in Rust, it's a challenge, but perfectly doable!
 
 ## Disclaimer
-RustCred was my first Rust project, a side-project of mine, while learning Rust. I take no resposibility for what you might do with it. I am, however, open to contributions and pull-requests!
+RustCred was my first Rust project while learning Rust. I take no responsibility for what you might do with it. I am, however, open to contributions and pull-requests!
 Any changes is done at my discretion; how the site works, what repos are tracked for scores, how often the web-page it is updated, etc.
 This is meant to be fun, nothing else. 
