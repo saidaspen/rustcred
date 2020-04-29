@@ -1,6 +1,6 @@
 # 🦀 RustCred
 Open Source is not a competition. Well actually, at RustCred, it is...
-It's a small Rust application that queries GitHub for data and then populates the HTML that is the npublished to [RustCred.dev](https://rustcred.dev).
+It's a small Rust application that queries GitHub for data and then populates the HTML that is the npublished to [https:://rustcred.dev](https://rustcred.dev).
 
 The main idea is to generate a score for contributing to Rust related open source projects. It's not serious, it's just for fun.
 
