@@ -189,6 +189,13 @@ fn main() {
         .expect("unable to write file about.html");
     fs::write(format!("{}/index.html", output_dir), scores_html)
         .expect("Unable to write file index.html");
+    fs::create_dir_all(format!("{}/css", output_dir))
+        .expect("Unable to create css directory in output");
+    fs::copy(
+        format!("{}/css/rustcred.css", templates_dir),
+        format!("{}/css/rustcred.css", output_dir),
+    )
+    .expect("Unable to copy css files");
 }
 
 fn render_about(tera: &Tera) -> String {
